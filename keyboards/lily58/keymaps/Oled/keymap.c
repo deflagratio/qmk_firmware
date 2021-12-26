@@ -21,9 +21,9 @@
 
 enum layer_number {
   _WORKMAN = 0,
-  _QWERTY = 1,
-  _NAV = 2,
-  _NUM = 3,
+  _QWERTY,
+  _NAV,
+  _NUM,
 };
 
 //define layer key names
@@ -45,9 +45,8 @@ qk_tap_dance_action_t tap_dance_actions[] = {
   //Tap once for snipping tool, twice for Print Screen
   [TD_SCREEN_CAP]  = ACTION_TAP_DANCE_DOUBLE(LSG(KC_S), KC_PSCR),
 // ESCAPE ON TAP, CHANGE DEFAULT LAYER TO QWERTY
-  [TD_QWERTY]  = ACTION_TAP_DANCE_DUAL_ROLE(KC_ESC, _QWERTY),
-  [TD_WORK]  = ACTION_TAP_DANCE_DUAL_ROLE(KC_ESC, _WORKMAN),
-  // Regular on tap. shifted command on double tap.
+  [TD_QWERTY]  = ACTION_TAP_DANCE_LAYER_TOGGLE(KC_ESC, _QWERTY),
+// Regular on tap. shifted command on double tap.
   [TD_BRAC_OP]  = ACTION_TAP_DANCE_DOUBLE(KC_LBRC, S(KC_LBRC)),
   [TD_BRAC_CL]  = ACTION_TAP_DANCE_DOUBLE(KC_RBRC, S(KC_RBRC))
 };
@@ -80,6 +79,43 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 return true;
 };
+
+//OLED Screen controls
+//SSD1306 OLED update loop, make sure to enable OLED_DRIVER_ENABLE=yes in rules.mk
+#ifdef OLED_DRIVER_ENABLE
+
+oled_rotation_t oled_init_user(oled_rotation_t rotation) {
+  if (!is_keyboard_master())
+    return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
+  return OLED_ROTATION_270;
+}
+
+// When you add source files to SRC in rules.mk, you can use functions.
+const char *read_layer_state(void);
+const char *read_logo(void);
+//void set_keylog(uint16_t keycode, keyrecord_t *record);
+//const char *read_keylog(void);
+//const char *read_keylogs(void);
+
+// const char *read_mode_icon(bool swap);
+const char *read_host_led_state(void);
+// void set_timelog(void);
+// const char *read_timelog(void);
+
+void oled_task_user(void) {
+  if (is_keyboard_master()) {
+    // If you want to change the display of OLED, you need to change here
+    oled_write_ln(read_layer_state(), false);
+    //oled_write_ln(read_keylog(), false);
+    //oled_write_ln(read_keylogs(), false);
+    //oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
+    oled_write_ln(read_host_led_state(), false);
+    //oled_write_ln(read_timelog(), false);
+  } else {
+    oled_write(read_logo(), false);
+  }
+}
+#endif // OLED_DRIVER_ENABLE
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -120,7 +156,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 *           `--------------------------------''-------'          '------''----------------------------'
 */
 [_QWERTY] = LAYOUT(
-   TD(TD_WORK),     KC_1, KC_2,  KC_3,  KC_4,    KC_5,                          KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    TG(NAV),
+   TD(TD_QWERTY),  KC_1, KC_2,  KC_3,  KC_4,    KC_5,                          KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    TG(NAV),
    KC_TAB,         KC_Q, KC_W,  KC_E,  KC_R,    KC_T,                          KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_MINS,
    KC_LCTRL,       KC_A, KC_S,  KC_D,  KC_F,    KC_G,                          KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
    SFT_T(KC_CAPS), KC_Z, KC_X,  KC_C,  KC_V,    KC_B, LALT(KC_TAB), C(KC_TAB), KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_BTN1,

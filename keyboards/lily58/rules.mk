@@ -32,5 +32,6 @@ SLEEP_LED_ENABLE = no    # Breathing sleep LED during USB suspend
 OLED_DRIVER_ENABLE = no    # OLED display
 SPLIT_KEYBOARD = yes
 TAP_DANCE_ENABLE = yes
+LOCAL_GLCDFONT = yes
 
 DEFAULT_FOLDER = lily58/rev1
